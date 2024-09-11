@@ -6,7 +6,9 @@ from datetime import datetime
 app = Flask(__name__)
 
 # MongoDB connection
-client = pymongo.MongoClient("mongodb://localhost:27017/")
+# client = pymongo.MongoClient("mongodb://localhost:27017/")
+client = pymongo.MongoClient("mongodb+srv://admin:mongodb1@Ambrela@Cluster0.mongodb.net/webhook_db?retryWrites=true&w=majority")
+
 db = client['webhook_db']
 collection = db['github_events']
 
@@ -78,6 +80,77 @@ def get_events():
         return jsonify(event_list), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/test_db')
+def test_db():
+    try:
+        # Test MongoDB connection
+        client.admin.command('ping')
+        return jsonify({"status": "MongoDB connected!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/test_nginx')
+def test_nginx():
+    return jsonify({"status": "Nginx connected to Flask!"}), 200
+
+@app.route('/test_insert')
+def test_insert():
+    try:
+        # Insert a test event to MongoDB
+        test_event = {
+            "request_id": "test_id",
+            "author": "Test Author",
+            "action": "TEST",
+            "from_branch": "test_branch",
+            "to_branch": "main",
+            "timestamp": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+        }
+        collection.insert_one(test_event)
+        return jsonify({"status": "Test event inserted"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/test_webhook', methods=['POST'])
+def test_webhook():
+    try:
+        # Example payload to simulate a webhook event
+        data = {
+            "commits": [{
+                "id": "test_commit_id",
+                "message": "Test commit",
+                "timestamp": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+            }],
+            "pusher": {"name": "test_pusher"},
+            "ref": "refs/heads/test_branch"
+        }
+
+        # You can copy-paste the webhook processing logic here for testing
+        action_type = 'PUSH'
+        author = data['pusher']['name']
+        to_branch = data['ref'].split('/')[-1]
+        request_id = data['commits'][0]['id']
+        from_branch = None
+
+        # Create event document
+        timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+        event = {
+            "request_id": request_id,
+            "author": author,
+            "action": action_type,
+            "from_branch": from_branch,
+            "to_branch": to_branch,
+            "timestamp": timestamp
+        }
+
+        # Insert into MongoDB
+        collection.insert_one(event)
+
+        return jsonify({"status": "Webhook processed successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)

@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 from flask import Flask, request, jsonify, render_template
 import pymongo
 from datetime import datetime
@@ -8,7 +9,9 @@ app = Flask(__name__)
 
 # MongoDB connection
 # client = pymongo.MongoClient("mongodb://localhost:27017/")
-mongo_uri = os.getenv('MONGO_URI')
+username = urllib.parse.quote_plus(os.getenv('MONGO_USERNAME'))
+password = urllib.parse.quote_plus(os.getenv('MONGO_PASSWORD'))
+mongo_uri = f"mongodb+srv://{username}:{password}@cluster.mongodb.net/webhook_db?retryWrites=true&w=majority"
 client = pymongo.MongoClient(mongo_uri)
 
 db = client['webhook_db']

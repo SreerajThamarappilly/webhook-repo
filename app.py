@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify, render_template
 import pymongo
 from datetime import datetime
@@ -7,7 +8,8 @@ app = Flask(__name__)
 
 # MongoDB connection
 # client = pymongo.MongoClient("mongodb://localhost:27017/")
-client = pymongo.MongoClient("mongodb+srv://admin:mongodb1@Ambrela@Cluster0.mongodb.net/webhook_db?retryWrites=true&w=majority")
+mongo_uri = os.getenv('MONGO_URI')
+client = pymongo.MongoClient(mongo_uri)
 
 db = client['webhook_db']
 collection = db['github_events']

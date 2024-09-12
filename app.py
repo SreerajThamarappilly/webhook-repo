@@ -9,10 +9,10 @@ app = Flask(__name__)
 
 # MongoDB connection
 # mongo_uri = "mongodb://localhost:27017/"
-# username = urllib.parse.quote_plus(os.getenv('MONGO_USERNAME'))
-# password = urllib.parse.quote_plus(os.getenv('MONGO_PASSWORD'))
-# mongo_uri = f"mongodb+srv://{username}:{password}@cluster0.mongodb.net/webhook_db?retryWrites=true&w=majority"
-mongo_uri = "mongodb+srv://admin:mongodb1%40Ambrela@cluster0.h4sd3.mongodb.net/webhook_db?retryWrites=true&w=majority"
+username = urllib.parse.quote_plus(os.getenv('MONGO_USERNAME'))
+password = urllib.parse.quote_plus(os.getenv('MONGO_PASSWORD'))
+cluster = urllib.parse.quote_plus(os.getenv('MONGO_CLUSTER'))
+mongo_uri = f"mongodb+srv://{username}:{password}@{cluster}.mongodb.net/webhook_db?retryWrites=true&w=majority"
 client = pymongo.MongoClient(mongo_uri)
 
 db = client['webhook_db']

@@ -75,6 +75,6 @@ The app will run locally on http://localhost:5000/. To test the /test_db route, 
 - **/events**: Retrieves the latest events from MongoDB.
 - **/**: Displays the UI for tracking events.
 
-### 9. License
+## License
 
 This project is licensed under the MIT License.

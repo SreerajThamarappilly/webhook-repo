@@ -29,27 +29,33 @@ def webhook():
     try:
         data = request.json
 
-        # Process GitHub event types
-        if 'commits' in data:  # Handling Push Event
+        # Handle GitHub Push event
+        if 'commits' in data:  
             action_type = 'PUSH'
             author = data['pusher']['name']
             to_branch = data['ref'].split('/')[-1]
             request_id = data['commits'][0]['id']
             from_branch = None
-        elif 'pull_request' in data:  # Handling Pull Request Event
-            action_type = 'PULL_REQUEST'
-            author = data['pull_request']['user']['login']
-            from_branch = data['pull_request']['head']['ref']
-            to_branch = data['pull_request']['base']['ref']
-            request_id = data['pull_request']['id']
-        elif 'merged' in data['pull_request'] and data['pull_request']['merged']:  # Handling Merge Event
-            action_type = 'MERGE'
-            author = data['pull_request']['user']['login']
-            from_branch = data['pull_request']['head']['ref']
-            to_branch = data['pull_request']['base']['ref']
-            request_id = data['pull_request']['id']
 
-        # Create event document
+        # Handle GitHub Pull Request event
+        elif 'pull_request' in data:
+            author = data['pull_request']['user']['login']
+            from_branch = data['pull_request']['head']['ref']
+            to_branch = data['pull_request']['base']['ref']
+            request_id = data['pull_request']['id']
+            
+            # Process based on action type
+            if data['action'] == 'opened':
+                action_type = 'PULL_REQUEST_OPENED'
+            elif data['action'] == 'review_requested':
+                action_type = 'PULL_REQUEST_REVIEW_REQUESTED'
+            elif data['action'] == 'closed':
+                if data['pull_request']['merged']:  # Handle merged pull request
+                    action_type = 'MERGE'
+                else:
+                    action_type = 'PULL_REQUEST_CLOSED'
+
+        # Create event document for MongoDB
         timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
         event = {
             "request_id": request_id,
@@ -62,7 +68,6 @@ def webhook():
 
         # Insert event into MongoDB
         collection.insert_one(event)
-
         return jsonify({"status": "Event received"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
